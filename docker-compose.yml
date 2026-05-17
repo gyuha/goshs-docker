@@ -1,0 +1,11 @@
+services:
+  goshs:
+    build: .
+    container_name: goshs
+    restart: always
+    ports:
+      - "${GOSHS_PORT:-8000}:${GOSHS_PORT:-8000}"
+    volumes:
+      - ${GOSHS_SHARE_DIR:-./shared}:/shared
+    env_file:
+      - .env
