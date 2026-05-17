@@ -1,0 +1,4 @@
+services:
+  goshs:
+    volumes:
+      - ./certs:/certs:ro

@@ -35,7 +35,12 @@ docker compose up -d
 | `GOSHS_AUTH_ENABLED` | `false` | `true` 시 Basic Auth(username/password) 활성화 |
 | `GOSHS_AUTH_USERNAME` | `admin` | 인증 사용자 이름. `GOSHS_AUTH_ENABLED=true`일 때만 유효 |
 | `GOSHS_AUTH_PASSWORD` | `changeme` | 인증 비밀번호. 평문 또는 bcrypt 해시 사용 가능 |
-| `GOSHS_TLS_ENABLED` | `false` | `true` 시 자체 서명 인증서로 HTTPS 활성화 |
+| `GOSHS_TLS_ENABLED` | `false` | `true` 시 HTTPS 활성화 (`GOSHS_TLS_MODE`로 방식 선택) |
+| `GOSHS_TLS_MODE` | `self-signed` | TLS 방식: `self-signed` / `letsencrypt` / `custom` |
+| `GOSHS_TLS_DOMAIN` | — | LE 모드: 인증서 도메인 (예: `home.example.com`) |
+| `GOSHS_TLS_EMAIL` | — | LE 모드: 인증서 갱신 알림 이메일 |
+| `GOSHS_TLS_CERT_FILE` | `/certs/cert.pem` | custom 모드: 컨테이너 내 cert 경로 |
+| `GOSHS_TLS_KEY_FILE` | `/certs/key.pem` | custom 모드: 컨테이너 내 key 경로 |
 | `GOSHS_UPLOAD_ENABLED` | `false` | `true` 시 브라우저에서 파일 업로드 허용 |
 | `GOSHS_CLIPBOARD_ENABLED` | `true` | `false` 시 웹소켓 클립보드 공유 비활성화 |
 
@@ -56,11 +61,57 @@ GOSHS_AUTH_PASSWORD=changeme
 
 ### HTTPS 활성화
 
+`GOSHS_TLS_ENABLED=true`로 켠 뒤 `GOSHS_TLS_MODE`로 방식을 선택합니다.
+
+#### 자체 서명 인증서 (기본)
+
 ```env
 GOSHS_TLS_ENABLED=true
+GOSHS_TLS_MODE=self-signed
 ```
 
-자체 서명 인증서이므로 브라우저에서 보안 경고가 표시됩니다. 무시하고 진행하거나, 터미널에서는 `curl -k https://localhost:8000`으로 접근합니다.
+```bash
+docker compose up -d
+curl -k https://localhost:8000
+```
+
+브라우저 보안 경고가 발생합니다. 내부망/개인 용도에 적합합니다.
+
+#### Let's Encrypt (공인 인증서, 브라우저 경고 없음)
+
+공인 도메인이 있고, 포트 80/443이 외부에서 접근 가능해야 합니다.
+
+```env
+GOSHS_TLS_ENABLED=true
+GOSHS_TLS_MODE=letsencrypt
+GOSHS_TLS_DOMAIN=home.example.com
+GOSHS_TLS_EMAIL=you@example.com
+```
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.letsencrypt.yml up -d
+```
+
+> 라우터에서 포트 80, 443을 이 서버로 포트포워딩해야 ACME 챌린지가 통과됩니다.
+
+#### 사용자 인증서 (custom)
+
+mkcert, certbot 등으로 발급한 cert/key를 `./certs/`에 배치합니다.
+
+```bash
+# mkcert 예시
+mkcert -install
+mkcert -cert-file certs/cert.pem -key-file certs/key.pem localhost 127.0.0.1
+```
+
+```env
+GOSHS_TLS_ENABLED=true
+GOSHS_TLS_MODE=custom
+```
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.custom-tls.yml up -d
+```
 
 ### 파일 업로드 허용
 
@@ -100,12 +151,15 @@ GOSHS_AUTH_PASSWORD=$2a$14$ydRJ//Ob4SctB/D7o.rvU.LmPs/vwXkeXCbtpCqzgOJDSShLgiY52
 
 ```
 goshs-docker/
-├── Dockerfile          # goshs v2.0.8 바이너리 다운로드 및 Alpine 이미지 빌드
-├── entrypoint.sh       # .env 환경 변수 → goshs CLI 플래그 변환
-├── docker-compose.yml  # 서비스 정의 (포트, 볼륨, 환경 파일)
-├── .env.example        # 설정 템플릿 — 이 파일을 .env로 복사하여 사용
-├── .env                # 실제 설정 파일 (git 추적 제외)
-└── shared/             # 기본 공유 디렉토리 (GOSHS_SHARE_DIR 기본값)
+├── Dockerfile                      # goshs v2.0.8 바이너리 다운로드 및 Alpine 이미지 빌드
+├── entrypoint.sh                   # .env 환경 변수 → goshs CLI 플래그 변환
+├── docker-compose.yml              # 서비스 정의 (포트, 볼륨, 환경 파일)
+├── docker-compose.letsencrypt.yml  # Let's Encrypt용 포트 80/443 추가 override
+├── docker-compose.custom-tls.yml   # 사용자 인증서용 ./certs 볼륨 override
+├── .env.example                    # 설정 템플릿 — 이 파일을 .env로 복사하여 사용
+├── .env                            # 실제 설정 파일 (git 추적 제외)
+├── shared/                         # 기본 공유 디렉토리 (GOSHS_SHARE_DIR 기본값)
+└── certs/                          # custom TLS 모드용 cert/key 배치 디렉토리
 ```
 
 ## 참고
