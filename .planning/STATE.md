@@ -30,3 +30,4 @@ See: .planning/PROJECT.md (updated 2026-05-17)
 | ID | Description | Date | Commit | Dir |
 |----|-------------|------|--------|-----|
 | 260517-ffo | 볼륨을 마운트 해 줘. | 2026-05-17 | 02700f2 | [260517-ffo](.planning/quick/260517-ffo/) |
+| 260517-fta | README.md 에 프로젝트 사용 방법 및 설정을 설명 해 줘. | 2026-05-17 | 6849d08 | [260517-fta-readme-md](.planning/quick/260517-fta-readme-md/) |
