@@ -22,3 +22,11 @@ See: .planning/PROJECT.md (updated 2026-05-17)
 
 ---
 *Last updated: 2026-05-17 after initialization*
+
+## Quick Tasks
+
+### Quick Tasks Completed
+
+| ID | Description | Date | Commit | Dir |
+|----|-------------|------|--------|-----|
+| 260517-ffo | 볼륨을 마운트 해 줘. | 2026-05-17 | 02700f2 | [260517-ffo](.planning/quick/260517-ffo/) |
